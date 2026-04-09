@@ -1,60 +1,46 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import neuLogo from "/neutralino.png";
 import "./App.css";
-
-import { filesystem } from "@neutralinojs/lib";
+import { os } from "@neutralinojs/lib";
 import ProcessSpawner from "./ProcessSpawner";
 
+const DEV = import.meta.env.MODE === "development";
+const ROOT = DEV ? "C:\\Users\\rob\\Desktop\\tts-generation-webui-main\\" : ".";
+const OUTPUTS_PATH = ROOT + "outputs";
+
 const PROCESSES = [
-  { name: "npm start", command: "npm run start" },
-  { name: "dir", command: "dir" },
-  { name: "echo hello world", command: "echo hello world" },
+  {
+    name: "TTS WebUI",
+    command: "python server.py",
+    openUrl: "http://localhost:7770",
+    cwd: ROOT,
+  },
+  {
+    name: "React UI",
+    command: "npm start",
+    openUrl: "http://localhost:3000",
+    cwd: DEV ? ROOT + "react-ui\\" : ".",
+  },
 ];
 
-const CWD =
-  import.meta.env.MODE === "development"
-    ? "C:\\Users\\rob\\Desktop\\tts-generation-webui-main\\react-ui\\"
-    : ".";
-
 function App() {
-  const [count, setCount] = useState(0);
-
-  // Log current directory or error after component is mounted
-  filesystem
-    .readDirectory("./")
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  const openOutputs = () => {
+    const isWindows = (window as any).NL_OS === "Windows";
+    os.execCommand(isWindows ? `explorer "${OUTPUTS_PATH}"` : `open "${OUTPUTS_PATH}"`);
+  };
 
   return (
-    <>
-      <div className="flex items-center justify-center gap-4">
-        <a href="http://localhost:3000" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="http://localhost:7770" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <a href="https://neutralino.js.org/" target="_blank">
-          <img src={neuLogo} className="logo" alt="Neutralino logo" />
-        </a>
+    <div className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">TTS WebUI</h1>
+      <ProcessSpawner processes={PROCESSES} cwd={ROOT} />
+      <div className="mt-4">
+        <button
+          onClick={openOutputs}
+          className="py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition-colors cursor-pointer"
+        >
+          Open outputs
+        </button>
       </div>
-      <h1>Vite + React + Neutralino</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <ProcessSpawner processes={PROCESSES} cwd={CWD} />
-			<p className="read-the-docs">Click on the Vite and React logos to learn more</p>
-		</>
-	);
+    </div>
+  );
 }
 
 export default App;
