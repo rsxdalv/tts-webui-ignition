@@ -1,6 +1,9 @@
 # Developer tools' files
 .lite_workspace.lua
 
+# Playwright MCP
+.playwright-mcp/
+
 # Neutralinojs binaries and builds
 /bin
 /dist

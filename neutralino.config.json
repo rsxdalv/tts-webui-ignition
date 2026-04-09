@@ -4,19 +4,23 @@
   "defaultMode": "window",
   "documentRoot": "/vite-src/dist/",
   "url": "/",
-  "port": 3000,
+  "port": 7779,
   "enableServer": true,
   "enableNativeAPI": true,
   "nativeAllowList": [
     "app.*",
-    "filesystem.readDirectory"
+    "filesystem.readDirectory",
+    "os.execCommand",
+    "os.spawnProcess",
+    "os.updateSpawnedProcess",
+    "events.*"
   ],
   "singlePageServe": true,
   "modes": {
     "window": {
       "title": "vite-app",
       "width": 800,
-      "height": 500,
+      "height": 1200,
       "minWidth": 400,
       "minHeight": 200,
       "icon": "/vite-src/public/logo512.png",
