@@ -31,6 +31,10 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
+      - name: Debug find dist
+        run: |
+          find . -name "*.neu" -o -name "vite-app*" 2>/dev/null | head -50
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
