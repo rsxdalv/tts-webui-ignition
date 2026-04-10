@@ -12,25 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux_x64
-            binary: neutralino-linux_x64
-          - os: ubuntu-latest
-            platform: linux_arm64
-            binary: neutralino-linux_arm64
-          - os: ubuntu-latest
-            platform: linux_armhf
-            binary: neutralino-linux_armhf
-          - os: macos-latest
-            platform: mac_x64
-            binary: neutralino-mac_x64
-          - os: macos-latest
-            platform: mac_arm64
-            binary: neutralino-mac_arm64
-          - os: windows-latest
-            platform: windows_x64
-            binary: neutralino-windows_x64.exe
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -46,19 +28,14 @@ jobs:
         working-directory: ./vite-src
         run: npm ci
 
-      - name: Build frontend
-        working-directory: ./vite-src
-        run: npm run build
-
       - name: Build neutralino app
-        working-directory: ./vite-src
-        run: npx neu build --platform ${{ matrix.platform }} --output ../dist
+        run: npx neu build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.binary }}
-          path: ./dist/${{ matrix.binary }}
+          name: dist-${{ matrix.os }}
+          path: dist/
 
   release:
     needs: build
@@ -72,23 +49,65 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          pattern: dist-*
+          merge-multiple: true
 
-      - name: Create zip and tar.gz releases
+      - name: Prepare binaries
         run: |
-          cd artifacts
-          for dir in */; do
-            name="${dir%/}"
-            if [[ "$name" == windows_* ]]; then
-              7z a "${name}.zip" "./${dir}*"
-            else
-              tar -czf "${name}.tar.gz" -C "./${dir}" .
+          mkdir -p release
+          # Linux binaries are in dist-vite-app/ directory
+          if [ -d "dist-vite-app" ]; then
+            cd dist-vite-app
+            # Find all executable files
+            for f in $(find . -type f -executable -name "vite-app*"); do
+              cp "$f" ../release/
+            done
+            # Find all .zip files
+            for f in $(find . -name "*.zip"); do
+              cp "$f" ../release/
+            done
+            cd ..
+          fi
+          # macOS and Windows artifacts
+          for dir in dist-macos-latest dist-windows-latest; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              for f in $(find . -type f -executable -name "vite-app*"); do
+                cp "$f" ../release/
+              done
+              for f in $(find . -name "*.zip"); do
+                cp "$f" ../release/
+              done
+              cd ..
             fi
           done
+          ls -la release/
+
+      - name: Package releases
+        run: |
+          cd release
+          # Package Linux
+          if [ -f "vite-app" ]; then
+            tar -czf ../vite-app-linux.tar.gz vite-app
+          fi
+          # Package macOS
+          if [ -f "vite-app-macos" ]; then
+            tar -czf ../vite-app-macos.tar.gz vite-app-macos
+          fi
+          # Package Windows
+          if [ -f "vite-app.exe" ]; then
+            7z a ../vite-app-windows.zip vite-app.exe
+          fi
+          cd ..
+          ls -la *.tar.gz *.zip 2>/dev/null || true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.zip artifacts/*.tar.gz
+          files: |
+            vite-app-linux.tar.gz
+            vite-app-macos.tar.gz
+            vite-app-windows.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
