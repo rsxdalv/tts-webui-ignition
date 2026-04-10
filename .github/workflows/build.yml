@@ -20,13 +20,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build frontend
+        run: |
+          cd vite-src
+          npm ci
+          npm run build
+
       - name: Build neutralino app
         run: npx neu build --release
 
       - name: Prepare release files
         run: |
           mkdir -p release
-          ls -laR dist/
+          ls -la dist/
           cp dist/vite-app/vite-app-* release/ || true
           ls -la release/
 
