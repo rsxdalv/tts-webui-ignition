@@ -23,46 +23,11 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
-      - name: Prepare binaries
-        run: |
-          mkdir -p release
-          cd dist
-          # Find all executable files
-          for f in $(find . -type f -executable -name "vite-app*"); do
-            cp "$f" ../release/
-          done
-          # Find all .zip files
-          for f in $(find . -name "*.zip"); do
-            cp "$f" ../release/
-          done
-          cd ..
-          ls -la release/
-
-      - name: Package releases
-        run: |
-          cd release
-          # Package Linux
-          if [ -f "vite-app" ]; then
-            tar -czf ../vite-app-linux.tar.gz vite-app
-          fi
-          # Package macOS
-          if [ -f "vite-app-macos" ]; then
-            tar -czf ../vite-app-macos.tar.gz vite-app-macos
-          fi
-          # Package Windows
-          if [ -f "vite-app.exe" ]; then
-            7z a ../vite-app-windows.zip vite-app.exe
-          fi
-          cd ..
-          ls -la *.tar.gz *.zip 2>/dev/null || true
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            vite-app-linux.tar.gz
-            vite-app-macos.tar.gz
-            vite-app-windows.zip
+            dist/vite-app-release.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
