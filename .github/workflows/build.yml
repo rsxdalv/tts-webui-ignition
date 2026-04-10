@@ -31,15 +31,19 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
-      - name: Debug files
-        run: |
-          ls -la dist/vite-app/
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ github.sha }}
           name: Release ${{ github.sha }}
-          files: dist/vite-app/*
+          files: |
+            dist/vite-app/resources.neu
+            dist/vite-app/vite-app-linux_x64
+            dist/vite-app/vite-app-linux_arm64
+            dist/vite-app/vite-app-linux_armhf
+            dist/vite-app/vite-app-mac_x64
+            dist/vite-app/vite-app-mac_arm64
+            dist/vite-app/vite-app-mac_universal
+            dist/vite-app/vite-app-win_x64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
