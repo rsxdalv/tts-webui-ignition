@@ -39,6 +39,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: release-${{ github.sha }}
+          name: Release ${{ github.sha }}
           files: release/vite-app-*
           generate_release_notes: true
         env:
