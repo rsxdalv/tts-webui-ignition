@@ -29,6 +29,7 @@ jobs:
         run: npm ci
 
       - name: Build neutralino app
+        working-directory: ./vite-src
         run: npx neu build --release
 
       - name: Upload artifact
