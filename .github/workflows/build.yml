@@ -33,7 +33,8 @@ jobs:
         run: |
           mkdir -p release
           ls -la dist/
-          cp dist/vite-app/vite-app-* release/ || true
+          cd dist && unzip -o vite-app-release.zip -d extracted/
+          cp extracted/vite-app/* release/
           ls -la release/
 
       - name: Create Release
@@ -42,6 +43,5 @@ jobs:
           tag_name: release-${{ github.sha }}
           name: Release ${{ github.sha }}
           files: release/vite-app-*
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
