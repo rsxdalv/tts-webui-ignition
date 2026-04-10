@@ -26,26 +26,13 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          cp dist/vite-app/vite-app-linux_x64 release/
-          cp dist/vite-app/vite-app-linux_arm64 release/
-          cp dist/vite-app/vite-app-linux_armhf release/
-          cp dist/vite-app/vite-app-mac_x64 release/
-          cp dist/vite-app/vite-app-mac_arm64 release/
-          cp dist/vite-app/vite-app-mac_universal release/
-          cp dist/vite-app/vite-app-win_x64.exe release/vite-app.exe
+          cp dist/vite-app/* release/
           ls -la release/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/vite-app-linux_x64
-            release/vite-app-linux_arm64
-            release/vite-app-linux_armhf
-            release/vite-app-mac_x64
-            release/vite-app-mac_arm64
-            release/vite-app-mac_universal
-            release/vite-app.exe
+          files: release/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
