@@ -31,9 +31,12 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
-      - name: Debug find dist
+      - name: Debug find all files
         run: |
-          find . -name "*.neu" -o -name "vite-app*" 2>/dev/null | head -50
+          echo "=== dist folder ===" && ls -la dist/ 2>/dev/null || echo "no dist folder"
+          echo "=== dist/vite-app folder ===" && ls -la dist/vite-app/ 2>/dev/null || echo "no dist/vite-app folder"
+          echo "=== vite-src/dist folder ===" && ls -la vite-src/dist/ 2>/dev/null || echo "no vite-src/dist folder"
+          echo "=== find all vite-app files ===" && find . -name "vite-app*" 2>/dev/null | head -20
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
