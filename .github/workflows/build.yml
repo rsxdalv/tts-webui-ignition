@@ -29,19 +29,11 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
-      - name: Prepare release files
-        run: |
-          mkdir -p release
-          ls -la dist/
-          cd dist && unzip -o vite-app-release.zip -d extracted/
-          cp extracted/* release/
-          ls -la release/
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ github.sha }}
           name: Release ${{ github.sha }}
-          files: release/vite-app-*
+          files: dist/vite-app/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
