@@ -29,8 +29,9 @@ jobs:
         run: npm ci
 
       - name: Build neutralino app
-        working-directory: ./vite-src
-        run: npx neu build --release
+        run: |
+          export PATH="$PWD/vite-src/node_modules/.bin:$PATH"
+          npx neu build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
