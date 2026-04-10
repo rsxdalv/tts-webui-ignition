@@ -1,0 +1,100 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux_x64
+            binary: neutralino-linux_x64
+          - os: ubuntu-latest
+            platform: linux_arm64
+            binary: neutralino-linux_arm64
+          - os: ubuntu-latest
+            platform: linux_armhf
+            binary: neutralino-linux_armhf
+          - os: macos-latest
+            platform: mac_x64
+            binary: neutralino-mac_x64
+          - os: macos-latest
+            platform: mac_arm64
+            binary: neutralino-mac_arm64
+          - os: windows-latest
+            platform: windows_x64
+            binary: neutralino-windows_x64.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: vite-src/package-lock.json
+
+      - name: Get neutralino cli
+        run: |
+          npm install -g @neutralinojs/cli@6.7.0
+
+      - name: Install frontend dependencies
+        working-directory: ./vite-src
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./vite-src
+        run: npm run build
+
+      - name: Build neutralino app
+        run: |
+          neu build --platform ${{ matrix.platform }} --output ./dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.binary }}
+          path: ./dist/${{ matrix.binary }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create zip and tar.gz releases
+        run: |
+          cd artifacts
+          for dir in */; do
+            name="${dir%/}"
+            if [[ "$name" == windows_* ]]; then
+              7z a "${name}.zip" "./${dir}*"
+            else
+              tar -czf "${name}.tar.gz" -C "./${dir}" .
+            fi
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip artifacts/*.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

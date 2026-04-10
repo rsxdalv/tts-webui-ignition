@@ -1,41 +1,69 @@
-# Neutralinojs + Vite + React + Typescript
-A simple [React](https://react.dev/) template for building [Neutralinojs](https://neutralino.js.org/) apps with [Vite](https://vitejs.dev/) as bundler and [Typescript](https://www.typescriptlang.org/)
+# TTS WebUI Ignition
 
-## How to set up
+A lightweight Neutralinojs desktop app that launches and manages [TTS WebUI](https://github.com/rsxdalv/tts-webui) — a full-featured text-to-speech generation studio.
+
+## Features
+
+- **One-click launch** of TTS WebUI backend (Gradio) and React frontend
+- **Open outputs folder** directly from the app
+- **Cross-platform** desktop wrapper using Neutralinojs
+- **Extension support** via TTS WebUI's built-in extension marketplace
+
+## Supported Models
+
+Bark, MusicGen, RVC, Tortoise, MAGNeT, Demucs, Maha TTS, Stable Audio, Vocos, MMS, Whisper, Vall-E X, AudioCraft, StyleTTS2, SeamlessM4T, XTTSv2, GPT-SoVITS, Piper TTS, Chatterbox, VibeVoice, Kokoro TTS, DIA, CosyVoice, and many more via extensions.
+
+## Setup
+
 ### Prerequisites
-All prerequisites of Neutralino, Vite, React and Typescript apply. You should have Neutralinojs CLI installed.
-### Setup with Neutralino CLI
-Create a new Neutralinojs project with this template with the following command:
-1. `neu create myapp --template Cloudwerk/neutralinojs-vite-react-ts`
-2. `cd myapp`
-3. Create a `.env` file with the content `VITE_GLOBAL_URL=http://localhost:3000/`
-### Manual Setup (with Neutralino CLI)
+- [TTS WebUI](https://github.com/rsxdalv/tts-webui) installed locally
+- Neutralinojs CLI: `npm i -g @neutralinojs/neu`
+
+### With Neutralino CLI
+```bash
+neu create myapp --template Cloudwerk/neutralinojs-vite-react-ts
+cd myapp
+```
+
+### Manual Setup
 1. Clone this repository
-2. Adjust the `modes.window.title` and `cli.binaryName` to your desired Application Name inside the `neutralino.config.json` file
-3. Open a Terminal inside the repos root
-4. run `neu update`
-5. run `cd vite-src`
-6. Adjust the `name` property to your desired Application Name inside the `package.json` file
-7. Create a `.env` file with the content `VITE_GLOBAL_URL=http://localhost:3000/`
-8. run `npm install`
+2. Edit `neutralino.config.json` — set `modes.window.title` and `cli.binaryName`
+3. Run `neu update`
+4. `cd vite-src`
+5. Edit `package.json` — set `name`
+6. Create `vite-src/.env.development` with `WEBUI_ROOT=/path/to/tts-webui`
+7. `npm install`
 
-## Known Issues
-None :)
-
-## How to develop
-
-Start the React development server and Neutralinojs app:
+## Development
 
 ```bash
 neu run
 ```
 
-## How to bundle the app
+## Bundle
 
-Trigger a new React build and create the application bundle with the following command:
 ```bash
 neu build
 ```
+
+## Configuration
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `WEBUI_ROOT` | Path to your local TTS WebUI installation | `.` |
+
+Example `vite-src/.env.development`:
+```
+WEBUI_ROOT=C:/Users/rob/Desktop/tts-generation-webui-main/
+```
+
+## How It Works
+
+This app spawns two processes:
+1. **TTS WebUI** — Gradio backend at `http://localhost:7770`
+2. **React UI** — Frontend at `http://localhost:3000`
+
+The React UI communicates with the Gradio backend to generate audio using any of the supported TTS models.
 
 ## License
 
