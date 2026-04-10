@@ -26,13 +26,13 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          cp dist/vite-app/* release/
+          cp dist/vite-app/vite-app-* release/
           ls -la release/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*
+          files: release/vite-app-*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
