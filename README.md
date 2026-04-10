@@ -19,20 +19,19 @@ Bark, MusicGen, RVC, Tortoise, MAGNeT, Demucs, Maha TTS, Stable Audio, Vocos, MM
 - [TTS WebUI](https://github.com/rsxdalv/tts-webui) installed locally
 - Neutralinojs CLI: `npm i -g @neutralinojs/neu`
 
-### With Neutralino CLI
-```bash
-neu create myapp --template Cloudwerk/neutralinojs-vite-react-ts
-cd myapp
-```
-
-### Manual Setup
-1. Clone this repository
+### Steps
+1. Clone this repository into a folder (this folder will become your app):
+   ```bash
+   git clone https://github.com/your-username/tts-webui-ignition.git
+   cd tts-webui-ignition
+   ```
 2. Edit `neutralino.config.json` — set `modes.window.title` and `cli.binaryName`
 3. Run `neu update`
 4. `cd vite-src`
 5. Edit `package.json` — set `name`
 6. Create `vite-src/.env.development` with `WEBUI_ROOT=/path/to/tts-webui`
 7. `npm install`
+8. `cd ..` back to root, then `neu run` to develop
 
 ## Development
 
@@ -42,6 +41,7 @@ neu run
 
 ## Bundle
 
+From the project root:
 ```bash
 neu build
 ```
