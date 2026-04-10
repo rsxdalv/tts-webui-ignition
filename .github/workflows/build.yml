@@ -40,11 +40,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
-
-      - name: Get neutralino cli
-        run: |
-          npm install -g @neutralinojs/cli@6.7.0
+          node-version: "22"
 
       - name: Install frontend dependencies
         working-directory: ./vite-src
@@ -55,8 +51,8 @@ jobs:
         run: npm run build
 
       - name: Build neutralino app
-        run: |
-          neu build --platform ${{ matrix.platform }} --output ./dist
+        working-directory: ./vite-src
+        run: npx neu build --platform ${{ matrix.platform }} --output ../dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
