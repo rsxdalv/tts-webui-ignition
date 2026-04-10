@@ -26,7 +26,7 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          ls -la dist/vite-app/
+          ls -laR dist/
           cp dist/vite-app/vite-app-* release/ || true
           ls -la release/
 
