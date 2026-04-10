@@ -1,4 +1,4 @@
-name: Build
+name: Build and Release
 
 on:
   push:
@@ -23,8 +23,29 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp dist/vite-app/vite-app-linux_x64 release/
+          cp dist/vite-app/vite-app-linux_arm64 release/
+          cp dist/vite-app/vite-app-linux_armhf release/
+          cp dist/vite-app/vite-app-mac_x64 release/
+          cp dist/vite-app/vite-app-mac_arm64 release/
+          cp dist/vite-app/vite-app-mac_universal release/
+          cp dist/vite-app/vite-app-win_x64.exe release/vite-app.exe
+          ls -la release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: vite-app-release
-          path: dist/vite-app-release.zip
+          files: |
+            release/vite-app-linux_x64
+            release/vite-app-linux_arm64
+            release/vite-app-linux_armhf
+            release/vite-app-mac_x64
+            release/vite-app-mac_arm64
+            release/vite-app-mac_universal
+            release/vite-app.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
