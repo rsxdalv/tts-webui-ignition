@@ -31,6 +31,11 @@ jobs:
       - name: Build neutralino app
         run: npx neu build --release
 
+      - name: Debug listing
+        run: |
+          echo "=== Listing all files ===" 
+          find . -type f \( -name "*.neu" -o -name "vite-app*" \) 2>/dev/null
+
       - name: Upload artifacts for debugging
         uses: actions/upload-artifact@v4
         with:
