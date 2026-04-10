@@ -24,14 +24,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install frontend dependencies
-        working-directory: ./vite-src
+      - name: Install dependencies
         run: npm ci
 
       - name: Build neutralino app
-        run: |
-          export PATH="$PWD/vite-src/node_modules/.bin:$PATH"
-          npx neu build --release
+        run: npx neu build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
