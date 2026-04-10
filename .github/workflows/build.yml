@@ -34,7 +34,7 @@ jobs:
           mkdir -p release
           ls -la dist/
           cd dist && unzip -o vite-app-release.zip -d extracted/
-          cp extracted/vite-app/* release/
+          cp extracted/* release/
           ls -la release/
 
       - name: Create Release
