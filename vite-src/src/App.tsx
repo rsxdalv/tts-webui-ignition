@@ -1,23 +1,23 @@
 import "./App.css";
 import { os } from "@neutralinojs/lib";
 import ProcessSpawner from "./ProcessSpawner";
+import { WEBUI_ROOT, OUTPUTS_PATH, joinPath } from "./config";
 
 const DEV = import.meta.env.MODE === "development";
-const ROOT = DEV ? "C:\\Users\\rob\\Desktop\\tts-generation-webui-main\\" : ".";
-const OUTPUTS_PATH = ROOT + "outputs";
+const REACT_UI_PATH = DEV ? joinPath(WEBUI_ROOT, "react-ui") + "/" : ".";
 
 const PROCESSES = [
   {
     name: "TTS WebUI",
     command: "python server.py",
     openUrl: "http://localhost:7770",
-    cwd: ROOT,
+    cwd: WEBUI_ROOT,
   },
   {
     name: "React UI",
     command: "npm start",
     openUrl: "http://localhost:3000",
-    cwd: DEV ? ROOT + "react-ui\\" : ".",
+    cwd: REACT_UI_PATH,
   },
 ];
 
@@ -30,7 +30,7 @@ function App() {
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">TTS WebUI</h1>
-      <ProcessSpawner processes={PROCESSES} cwd={ROOT} />
+      <ProcessSpawner processes={PROCESSES} cwd={WEBUI_ROOT} />
       <div className="mt-4">
         <button
           onClick={openOutputs}
