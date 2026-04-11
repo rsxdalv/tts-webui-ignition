@@ -35,6 +35,7 @@ jobs:
         run: |
           echo "=== Listing all files ===" 
           find . -type f \( -name "*.neu" -o -name "vite-app*" \) 2>/dev/null
+          ls -R dist/
 
       - name: Upload artifacts for debugging
         uses: actions/upload-artifact@v4
@@ -60,3 +61,18 @@ jobs:
             dist/vite-app/vite-app-win_x64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Build Native Binaries
+      #   run: |
+      #     npx @neutralinojs/neu update
+      #     npx @neutralinojs/neu build --release
+      #     PACKAGE_VERSION=$(cat package.json \
+      #       | grep version \
+      #       | head -1 \
+      #       | awk -F: '{ print $2 }' \
+      #       | sed 's/[",]//g')
+      #     mv dist/photonic-etcher-release.zip dist/photonic-etcher-all-platforms-${{ steps.get_version.outputs.VERSION }}.zip
+      # - uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: "dist/photonic-etcher-all-platforms-${{ steps.get_version.outputs.VERSION }}.zip"
+      #     token: ${{ secrets.ACTIONS_DEPLOY_ACCESS_TOKEN }}
