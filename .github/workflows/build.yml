@@ -22,6 +22,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Get project version
+        run: |
+          VERSION=$(npx neu version | grep "Project version:" | awk '{print $NF}')
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Build frontend
         run: |
           cd vite-src
@@ -37,45 +42,20 @@ jobs:
       - name: Debug listing
         run: |
           echo "=== Listing all files ===" 
-          find . -type f \( -name "*.neu" -o -name "vite-app*" \) 2>/dev/null
           ls -R dist/
-
-      - name: Upload artifacts for debugging
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-files
-          path: |
-            dist/
-            vite-src/dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ github.sha }}
-          name: Release ${{ github.sha }}
+          tag_name: release-${{ env.RELEASE_VERSION }}
+          name: Release ${{ env.RELEASE_VERSION }}
           files: |
-            dist/vite-app/resources.neu
-            dist/vite-app/vite-app-linux_x64
-            dist/vite-app/vite-app-linux_arm64
-            dist/vite-app/vite-app-linux_armhf
-            dist/vite-app/vite-app-mac_x64
-            dist/vite-app/vite-app-mac_arm64
-            dist/vite-app/vite-app-mac_universal
-            dist/vite-app/vite-app-win_x64.exe
+            dist/tts-webui-igniter/tts-webui-igniter-linux_x64
+            dist/tts-webui-igniter/tts-webui-igniter-linux_arm64
+            dist/tts-webui-igniter/tts-webui-igniter-linux_armhf
+            dist/tts-webui-igniter/tts-webui-igniter-mac_x64
+            dist/tts-webui-igniter/tts-webui-igniter-mac_arm64
+            dist/tts-webui-igniter/tts-webui-igniter-mac_universal
+            dist/tts-webui-igniter/tts-webui-igniter-win_x64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: Build Native Binaries
-      #   run: |
-      #     npx @neutralinojs/neu update
-      #     npx @neutralinojs/neu build --release
-      #     PACKAGE_VERSION=$(cat package.json \
-      #       | grep version \
-      #       | head -1 \
-      #       | awk -F: '{ print $2 }' \
-      #       | sed 's/[",]//g')
-      #     mv dist/photonic-etcher-release.zip dist/photonic-etcher-all-platforms-${{ steps.get_version.outputs.VERSION }}.zip
-      # - uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: "dist/photonic-etcher-all-platforms-${{ steps.get_version.outputs.VERSION }}.zip"
-      #     token: ${{ secrets.ACTIONS_DEPLOY_ACCESS_TOKEN }}
