@@ -28,8 +28,11 @@ jobs:
           npm ci
           npm run build
 
+      - name: Update Neutralino.js
+        run: npx neu update
+
       - name: Build neutralino app
-        run: npx neu build --release
+        run: npx neu build --release --embed-resources
 
       - name: Debug listing
         run: |
