@@ -34,7 +34,7 @@ function App() {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || "system",
   );
-  const [isDark, setIsDark] = useState(() => getEffectiveTheme(theme));
+  const [, setIsDark] = useState(() => getEffectiveTheme(theme));
 
   // Sync document class and listen for system theme changes
   useEffect(() => {
