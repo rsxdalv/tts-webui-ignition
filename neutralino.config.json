@@ -24,7 +24,7 @@
       "minWidth": 400,
       "minHeight": 200,
       "icon": "/vite-src/public/logo512.png",
-      "enableInspector": true
+      "enableInspector": false
     }
   },
   "cli": {
