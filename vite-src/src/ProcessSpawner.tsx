@@ -5,12 +5,11 @@ interface ProcessEntry {
   name: string;
   command: string;
   openUrl?: string;
-  cwd?: string; // per-process override; falls back to the global cwd prop
+  cwd?: string;
 }
 
 interface ProcessSpawnerProps {
-  processes: ProcessEntry[];
-  cwd: string;
+  process: ProcessEntry;
 }
 
 interface ProcessOutput {
@@ -20,19 +19,16 @@ interface ProcessOutput {
 }
 
 interface ProcInfo {
-  id: number;  // Neutralino internal ID (used for updateSpawnedProcess & event matching)
-  pid: number; // OS process ID (used for taskkill / kill)
+  id: number;
+  pid: number;
 }
 
-export default function ProcessSpawner({ processes, cwd }: ProcessSpawnerProps) {
-  const [outputs, setOutputs] = useState<Map<string, ProcessOutput>>(new Map());
-  const [procIds, setProcIds] = useState<Map<string, ProcInfo>>(new Map());
+export default function ProcessSpawner({ process: proc }: ProcessSpawnerProps) {
+  const [outputs, setOutputs] = useState<ProcessOutput>({ stdout: [], stderr: [], exitCode: null });
+  const [procId, setProcId] = useState<ProcInfo | null>(null);
 
-  // Stable refs so handler always sees current state without stale closures
-  const outputsRef = useRef<Map<string, ProcessOutput>>(new Map());
-  const procIdsRef = useRef<Map<string, ProcInfo>>(new Map());
-
-  // Singleton: exactly one handler, stable reference, no duplicate subscriptions
+  const outputsRef = useRef<ProcessOutput>({ stdout: [], stderr: [], exitCode: null });
+  const procIdRef = useRef<ProcInfo | null>(null);
   const handlerRef = useRef<((evt: any) => void) | null>(null);
 
   useEffect(() => {
@@ -40,40 +36,16 @@ export default function ProcessSpawner({ processes, cwd }: ProcessSpawnerProps) 
       const { id, action, data } = evt.detail;
       const numId = typeof id === "string" ? parseInt(id, 10) : id;
 
-      if (action === "stdOut" || action === "stdErr") {
+      if ((action === "stdOut" || action === "stdErr") && procIdRef.current?.id === numId) {
         setOutputs((prev) => {
-          const next = new Map(prev);
-          for (const [name, info] of procIdsRef.current) {
-            if (info.id === numId) {
-              const existing = next.get(name) || { stdout: [], stderr: [], exitCode: null };
-              const updated = { ...existing };
-              if (action === "stdOut") updated.stdout = [...updated.stdout, data];
-              else updated.stderr = [...updated.stderr, data];
-              next.set(name, updated);
-              break;
-            }
-          }
-          return next;
+          const updated = { ...prev };
+          if (action === "stdOut") updated.stdout = [...updated.stdout, data];
+          else updated.stderr = [...updated.stderr, data];
+          return updated;
         });
-      } else if (action === "exit") {
-        setOutputs((prev) => {
-          const next = new Map(prev);
-          for (const [name, info] of procIdsRef.current) {
-            if (info.id === numId) {
-              const existing = next.get(name) || { stdout: [], stderr: [], exitCode: null };
-              next.set(name, { ...existing, exitCode: data });
-              break;
-            }
-          }
-          return next;
-        });
-        setProcIds((prev) => {
-          const next = new Map(prev);
-          for (const [name, info] of next) {
-            if (info.id === numId) { next.delete(name); break; }
-          }
-          return next;
-        });
+      } else if (action === "exit" && procIdRef.current?.id === numId) {
+        setOutputs((prev) => ({ ...prev, exitCode: data }));
+        setProcId(null);
       }
     };
 
@@ -88,117 +60,99 @@ export default function ProcessSpawner({ processes, cwd }: ProcessSpawnerProps) 
     };
   }, []);
 
-  // Keep refs in sync with state
   useEffect(() => { outputsRef.current = outputs; }, [outputs]);
-  useEffect(() => { procIdsRef.current = procIds; }, [procIds]);
+  useEffect(() => { procIdRef.current = procId; }, [procId]);
 
-  const spawn = useCallback((proc: ProcessEntry) => {
-    os.spawnProcess(proc.command, { cwd: proc.cwd ?? cwd }).then((result) => {
+  const spawn = useCallback(() => {
+    os.spawnProcess(proc.command, { cwd: proc.cwd }).then((result) => {
       const info: ProcInfo = { id: result.id, pid: result.pid };
-      setProcIds((prev) => new Map(prev).set(proc.name, info));
-      setOutputs((prev) =>
-        new Map(prev).set(proc.name, { stdout: [], stderr: [], exitCode: null })
-      );
+      setProcId(info);
+      setOutputs({ stdout: [], stderr: [], exitCode: null });
     });
-  }, [cwd]);
+  }, [proc.command, proc.cwd]);
 
-  const terminate = useCallback((procName: string) => {
-    const info = procIdsRef.current.get(procName);
-    if (info === undefined) return;
+  const terminate = useCallback(() => {
+    if (procIdRef.current === null) return;
 
-    // NL_OS is injected by the Neutralino backend: "Windows" | "Linux" | "Darwin" | "FreeBSD"
     const isWindows = (window as any).NL_OS === "Windows";
     if (isWindows) {
-      // taskkill /F /T kills the entire process tree (npm → cmd → node/vite).
-      os.execCommand(`taskkill /F /T /PID ${info.pid}`).catch(() => {
-        os.updateSpawnedProcess(info.id, "exit").catch(() => {});
+      os.execCommand(`taskkill /F /T /PID ${procIdRef.current.pid}`).catch(() => {
+        os.updateSpawnedProcess(procIdRef.current!.id, "exit").catch(() => {});
       });
     } else {
-      os.updateSpawnedProcess(info.id, "exit").catch(() => {});
+      os.updateSpawnedProcess(procIdRef.current.id, "exit").catch(() => {});
     }
 
-    setProcIds((prev) => {
-      const next = new Map(prev);
-      next.delete(procName);
-      return next;
-    });
+    setProcId(null);
   }, []);
 
-  const [selectedLog, setSelectedLog] = useState<string | null>(null);
-  const selectedOutput = selectedLog ? (outputs.get(selectedLog) ?? null) : null;
+  const [selectedLog, setSelectedLog] = useState(false);
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        {processes.map((proc) => {
-          const isRunning = procIds.get(proc.name) !== undefined;
-          return (
-            <div key={proc.name} className="bg-gray-800 rounded-xl border border-gray-700 p-4 flex flex-col gap-2">
-              <h2 className="text-base font-semibold border-b border-gray-700 pb-2">{proc.name}</h2>
-              <button
-                onClick={() => isRunning ? terminate(proc.name) : spawn(proc)}
-                className={`w-full py-2 px-3 rounded-lg font-medium transition-colors cursor-pointer ${
-                  isRunning
-                    ? "bg-red-700 hover:bg-red-600 text-white"
-                    : "bg-green-700 hover:bg-green-600 text-white"
-                }`}
-              >
-                {isRunning ? `Stop ${proc.name}` : `Run ${proc.name}`}
-              </button>
-              <button
-                onClick={() => setSelectedLog(proc.name)}
-                className="w-full py-2 px-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition-colors cursor-pointer"
-              >
-                Open logs
-              </button>
-              {proc.openUrl && (
-                <button
-                  onClick={() => window.open(proc.openUrl, "_blank")}
-                  className="w-full py-2 px-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-medium transition-colors cursor-pointer"
-                >
-                  Open site
-                </button>
-              )}
-            </div>
-          );
-        })}
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2">
+        <h2 className="text-base font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 text-gray-900 dark:text-gray-100">{proc.name}</h2>
+        <button
+          onClick={() => procId ? terminate() : spawn()}
+          className={`w-full py-2 px-3 rounded-lg font-medium transition-colors cursor-pointer ${
+            procId
+              ? "bg-red-600 hover:bg-red-500 text-white"
+              : "bg-gray-500 hover:bg-gray-600 text-white"
+          }`}
+        >
+          {procId ? `Stop ${proc.name}` : `Run ${proc.name}`}
+        </button>
+        <button
+          onClick={() => setSelectedLog(true)}
+          className="w-full py-2 px-3 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium transition-colors cursor-pointer"
+        >
+          Open logs
+        </button>
+        {proc.openUrl && (
+          <button
+            onClick={() => window.open(proc.openUrl, "_blank")}
+            className="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors cursor-pointer"
+          >
+            Open site
+          </button>
+        )}
       </div>
 
-      {selectedLog !== null && (
+      {selectedLog && (
         <div
           className="fixed inset-0 bg-black/75 flex items-center justify-center z-50"
-          onClick={(e) => { if (e.target === e.currentTarget) setSelectedLog(null); }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedLog(false); }}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 w-[680px] max-w-[90vw] max-h-[80vh] overflow-auto">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-semibold text-lg">{selectedLog} — logs</span>
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 w-[680px] max-w-[90vw] max-h-[80vh] overflow-auto">
+            <div className="flex justify-between items-center mb-4 text-gray-900 dark:text-gray-100">
+              <span className="font-semibold text-lg">{proc.name} — logs</span>
               <button
-                onClick={() => setSelectedLog(null)}
-                className="text-gray-400 hover:text-white cursor-pointer px-2"
+                onClick={() => setSelectedLog(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer px-2"
               >
                 ✕
               </button>
             </div>
-            {selectedOutput ? (
+            {outputs.stdout.length > 0 || outputs.stderr.length > 0 ? (
               <>
                 <div className="mb-3">
-                  <span className="text-xs text-gray-400 uppercase tracking-wide">stdout</span>
-                  <pre className="mt-1 bg-gray-950 rounded-lg p-3 text-xs overflow-auto max-h-64 whitespace-pre-wrap">
-                    {selectedOutput.stdout.join("") || "(empty)"}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">stdout</span>
+                  <pre className="mt-1 bg-gray-100 dark:bg-black rounded-lg p-3 text-xs overflow-auto max-h-64 whitespace-pre-wrap text-green-700 dark:text-green-400">
+                    {outputs.stdout.join("") || "(empty)"}
                   </pre>
                 </div>
                 <div>
                   <span className="text-xs text-red-400 uppercase tracking-wide">stderr</span>
-                  <pre className="mt-1 bg-red-950 rounded-lg p-3 text-xs overflow-auto max-h-64 whitespace-pre-wrap">
-                    {selectedOutput.stderr.join("") || "(empty)"}
+                  <pre className="mt-1 bg-red-50 dark:bg-red-950 rounded-lg p-3 text-xs overflow-auto max-h-64 whitespace-pre-wrap text-red-700 dark:text-red-300">
+                    {outputs.stderr.join("") || "(empty)"}
                   </pre>
                 </div>
-                {selectedOutput.exitCode !== null && (
-                  <p className="mt-2 text-xs text-gray-500">Exit code: {selectedOutput.exitCode}</p>
+                {outputs.exitCode !== null && (
+                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Exit code: {outputs.exitCode}</p>
                 )}
               </>
             ) : (
-              <p className="text-gray-500 text-sm">No output recorded yet.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">No output yet.</p>
             )}
           </div>
         </div>
