@@ -22,7 +22,7 @@ function ActionButton({ label, onClick }: ActionButtonProps) {
   );
 }
 
-export function ReactUIStep({ onComplete }: ReactUIStepProps) {
+export function ReactUIStep({ }: ReactUIStepProps) {
   const isWindows = (window as any).NL_OS === "Windows";
 
   const openTerminal = async () => {
@@ -37,28 +37,17 @@ export function ReactUIStep({ onComplete }: ReactUIStepProps) {
     }
   };
 
-  const checkDiskUsage = async () => {
-    const cmd = isWindows
-      ? `start cmd /k "dir ${OUTPUTS_PATH}"`
-      : `open -a Terminal "du -sh ${OUTPUTS_PATH}"`;
-    try {
-      await os.execCommand(cmd);
-    } catch (error) {
-      console.error(`[ReactUIStep] Failed to check disk usage: ${error}`);
-    }
-  };
-
-  const manageExtensions = async () => {
-    const cmd = isWindows
-      ? `start ${joinPath(WEBUI_ROOT, "installer_scripts/tools/run_extension_manager.bat")}`
-      : `${joinPath(WEBUI_ROOT, "installer_scripts/tools/run_extension_manager.sh")}`;
-    console.log(`[ReactUIStep] Managing extensions: ${cmd}`);
-    try {
-      await os.execCommand(cmd);
-    } catch (error) {
-      console.error(`[ReactUIStep] Failed to manage extensions: ${error}`);
-    }
-  };
+  // Check disk usage while taking hardlinks into account
+  // const checkDiskUsage = async () => {
+  //   const cmd = isWindows
+  //     ? `start cmd /k "dir ${OUTPUTS_PATH}"`
+  //     : `open -a Terminal "du -sh ${OUTPUTS_PATH}"`;
+  //   try {
+  //     await os.execCommand(cmd);
+  //   } catch (error) {
+  //     console.error(`[ReactUIStep] Failed to check disk usage: ${error}`);
+  //   }
+  // };
 
   const openOutputs = async () => {
     const cmd = isWindows
