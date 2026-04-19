@@ -13,6 +13,7 @@ import {
   pathExistsInRoot,
 } from "./WaterfallInstaller";
 import { LogViewer } from "./LogViewer";
+import { isGitUpdated } from "./isGitUpdated";
 
 // ---------------------------------------------------------------------------
 // Installation waterfall steps
@@ -68,18 +69,42 @@ const INSTALLATION_STEPS: WaterfallStepDef[] = [
   },
   {
     id: "install",
-    title: "Update / Install WebUI",
+    title: "Install WebUI",
     description: "Create the Python environment and install all dependencies",
-    condition: () => pathExistsInRoot("installer_files/env"),
+    condition: () => pathExistsInRoot("installer_scripts/.git_version"),
     render: (onComplete) => (
       <div className="flex flex-col gap-6">
         <CondaSpawner
-          name="Update/Install WebUI"
+          name="Installer"
           command="node ./installer_scripts/init_app.js --silent"
           openUrl="http://localhost:7771"
           cwd={WEBUI_ROOT}
           onSuccess={onComplete}
         />
+        <LogViewer />
+      </div>
+    ),
+  },
+  {
+    id: "update",
+    title: "Update WebUI",
+    description: "Create the Python environment and install all dependencies",
+    condition: isGitUpdated,
+    render: (onComplete) => (
+      <div className="flex flex-col gap-6">
+        <CondaSpawner
+          name="Update"
+          command="node ./installer_scripts/init_app.js --silent"
+          openUrl="http://localhost:7771"
+          cwd={WEBUI_ROOT}
+          onSuccess={onComplete}
+        />
+        <button
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          onClick={onComplete}
+        >
+          Skip Update
+        </button>
         <LogViewer />
       </div>
     ),

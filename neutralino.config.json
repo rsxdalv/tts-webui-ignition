@@ -1,6 +1,6 @@
 {
   "applicationId": "js.neutralino.vitetsreact",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "defaultMode": "window",
   "documentRoot": "/vite-src/dist/",
   "url": "/",
@@ -12,6 +12,7 @@
     "filesystem.readDirectory",
     "filesystem.getStats",
     "filesystem.writeFile",
+    "filesystem.readFile",
     "os.execCommand",
     "os.spawnProcess",
     "os.updateSpawnedProcess",
