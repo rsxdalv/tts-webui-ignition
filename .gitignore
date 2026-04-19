@@ -4,6 +4,9 @@
 # Playwright MCP
 .playwright-mcp/
 
+# GitHub Copilot Skills
+.github/skills/
+
 # Neutralinojs binaries and builds
 /bin
 /dist
