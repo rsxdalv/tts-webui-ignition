@@ -148,6 +148,9 @@ export function WaterfallInstaller({ steps }: WaterfallInstallerProps) {
     setStatuses((prev) => {
       const s = [...prev];
       s[i] = "active";
+      for (let j = i + 1; j < s.length; j++) {
+        s[j] = "pending";
+      }
       return s;
     });
   }, []);
@@ -176,6 +179,8 @@ export function WaterfallInstaller({ steps }: WaterfallInstallerProps) {
     </div>
   );
 }
+
+const devMode = import.meta.env.VITE_DEV_MODE;
 
 // ---------------------------------------------------------------------------
 // WaterfallStepCard
@@ -258,16 +263,27 @@ function WaterfallStepCard({
             ↩ re-run
           </button>
         )}
+        {/* Skip */}
+        {
+          devMode && isActive && (
+            <button
+              onClick={onComplete}
+              className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              title="Skip this step"
+            >
+              skip →
+            </button>
+          )
+        }
         {isPending && (
           <span className="text-xs text-gray-400 dark:text-gray-600">
             waiting
           </span>
         )}
       </div>
-
       {/* ---- Body (only when active) ---- */}
-      {isActive && (
-        <div className="px-4 pb-4 border-t border-blue-200 dark:border-blue-900/50 pt-3">
+      {(isActive || (isCompleted && devMode)) && (
+        <div className={`px-4 pb-4 border-t border-blue-200 dark:border-blue-900/50 pt-3 ${isCompleted ? "hidden" : ""}`}>
           {step.render(onComplete)}
         </div>
       )}

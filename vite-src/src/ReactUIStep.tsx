@@ -31,7 +31,7 @@ export function ReactUIStep({ }: ReactUIStepProps) {
       : `${joinPath(WEBUI_ROOT, "installer_scripts/tools/open_terminal.sh")}`;
     console.log(`[ReactUIStep] Opening terminal with command: ${cmd}`);
     try {
-      await os.execCommand(cmd);
+      await os.spawnProcess(cmd);
     } catch (error) {
       console.error(`[ReactUIStep] Failed to open terminal: ${error}`);
     }
@@ -55,7 +55,7 @@ export function ReactUIStep({ }: ReactUIStepProps) {
       : `open "${OUTPUTS_PATH}"`;
     console.log(`[ReactUIStep] Opening outputs folder: ${cmd}`);
     try {
-      await os.execCommand(cmd);
+      await os.spawnProcess(cmd);
     } catch (error) {
       console.error(`[ReactUIStep] Failed to open outputs folder: ${error}`);
     }
@@ -65,7 +65,7 @@ export function ReactUIStep({ }: ReactUIStepProps) {
     const cmd = isWindows ? `explorer "${WEBUI_ROOT}"` : `open "${WEBUI_ROOT}"`;
     console.log(`[ReactUIStep] Opening install folder: ${cmd}`);
     try {
-      await os.execCommand(cmd);
+      await os.spawnProcess(cmd);
     } catch (error) {
       console.error(`[ReactUIStep] Failed to open install folder: ${error}`);
     }
@@ -108,6 +108,7 @@ export function ReactUIStep({ }: ReactUIStepProps) {
       />
 
       {/* Quick-access actions */}
+      {/* ISSUE - closing app does not close terminal. Then reopening the app does not work until it is closed */}
       <div className="border-t border-gray-200 dark:border-gray-800 pt-3">
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium uppercase tracking-wide">
           Quick actions

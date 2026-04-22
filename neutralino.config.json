@@ -1,6 +1,6 @@
 {
   "applicationId": "js.neutralino.vitetsreact",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "defaultMode": "window",
   "documentRoot": "/vite-src/dist/",
   "url": "/",
@@ -9,6 +9,7 @@
   "enableNativeAPI": true,
   "nativeAllowList": [
     "app.*",
+    "filesystem.createDirectory",
     "filesystem.readDirectory",
     "filesystem.getStats",
     "filesystem.writeFile",
